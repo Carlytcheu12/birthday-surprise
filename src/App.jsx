@@ -3725,8 +3725,8 @@ async function handleDownloadAllPhotos() {
   );
 }
 
-
 function App() {
+  
   const urlParams = new URLSearchParams(
     window.location.search
   );
@@ -3801,3 +3801,5 @@ function App() {
 
   return <Dashboard session={session} />;
 }
+
+export default App;
