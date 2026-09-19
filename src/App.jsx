@@ -3726,6 +3726,7 @@ async function handleDownloadAllPhotos() {
 }
 
 function App() {
+  function App() {
   const urlParams = new URLSearchParams(
     window.location.search
   );
@@ -3740,10 +3741,11 @@ function App() {
     useState(null);
 
   const [loading, setLoading] =
-    useState(isAdmin || isUncle);
+    useState(isAdmin);
 
   useEffect(() => {
-    if (!isAdmin && !isUncle) {
+    // La page invité n'a pas besoin de connexion
+    if (!isAdmin) {
       return;
     }
 
@@ -3769,12 +3771,20 @@ function App() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [isAdmin, isUncle]);
+  }, [isAdmin]);
 
+  // 🟢 PAGE INVITÉ
   if (!isAdmin && !isUncle) {
     return <GuestPage />;
   }
 
+  // ❤️ PAGE PERSONNELLE DE BRUNO
+  // Elle s'ouvre directement avec ?uncle=1
+  if (isUncle) {
+    return <UnclePrivatePage />;
+  }
+
+  // 🔐 PAGE ADMINISTRATEUR
   if (loading) {
     return (
       <div className="login-page">
@@ -3789,11 +3799,5 @@ function App() {
     return <Login />;
   }
 
-  if (isUncle) {
-    return <UnclePrivatePage />;
-  }
-
   return <Dashboard session={session} />;
-}
-
-export default App;
+}}
