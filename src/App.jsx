@@ -1280,43 +1280,86 @@ function cancelDeletePhoto() {
   setLoading(true);
   setError("");
 
-  const { data, error } = await supabase.rpc(
-    "get_public_guest",
-    {
-      guest_id: guest.id,
+  try {
+    // 1. Récupérer les informations publiques de l'invité
+    const { data, error } = await supabase.rpc(
+      "get_public_guest",
+      {
+        guest_id: guest.id,
+      }
+    );
+
+    if (error) {
+      console.error("Guest selection error:", error);
+      setError(
+        "Impossible de récupérer les informations de cet invité."
+      );
+      return;
     }
-  );
 
-  setLoading(false);
+    if (!data || data.length === 0) {
+      setError(
+        "Les informations de cet invité sont introuvables."
+      );
+      return;
+    }
 
-  if (error) {
-    console.error("Guest selection error:", error);
-    setError(
-      "Impossible de récupérer les informations de cet invité."
+    const guestData = data[0];
+
+    // 2. Normaliser l'identifiant de l'invité
+    const normalizedGuest = {
+      ...guestData,
+      id: guestData.id ?? guestData.guest_id ?? guest.id,
+    };
+
+    console.log("Selected guest:", normalizedGuest);
+    console.log("Selected guest ID:", normalizedGuest.id);
+
+    // 3. Marquer automatiquement l'invité comme arrivé
+    const { error: arrivalError } = await supabase.rpc(
+      "mark_guest_arrived",
+      {
+        p_guest_id: normalizedGuest.id,
+      }
     );
-    return;
-  }
 
-  if (!data || data.length === 0) {
-    setError(
-      "Les informations de cet invité sont introuvables."
+    if (arrivalError) {
+      console.error(
+        "Guest arrival registration error:",
+        arrivalError
+      );
+
+      setError(
+        "Impossible d'enregistrer votre arrivée. Veuillez réessayer."
+      );
+
+      return;
+    }
+
+    console.log(
+      "Guest automatically marked as arrived:",
+      normalizedGuest.id
     );
-    return;
+
+    // 4. Afficher la page personnelle de l'invité
+    setSelectedGuest({
+      ...normalizedGuest,
+      has_arrived: true,
+    });
+
+    setResults([]);
+  } catch (error) {
+    console.error(
+      "Unexpected guest selection error:",
+      error
+    );
+
+    setError(
+      "Une erreur est survenue. Veuillez réessayer."
+    );
+  } finally {
+    setLoading(false);
   }
-
-  const guestData = data[0];
-
-  // Normalise l'identifiant de l'invité
-  const normalizedGuest = {
-    ...guestData,
-    id: guestData.id ?? guestData.guest_id ?? guest.id,
-  };
-
-  console.log("Selected guest:", normalizedGuest);
-  console.log("Selected guest ID:", normalizedGuest.id);
-
-  setSelectedGuest(normalizedGuest);
-  setResults([]);
 }
 
   function handleReset() {
