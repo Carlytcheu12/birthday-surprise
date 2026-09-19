@@ -1091,6 +1091,31 @@ function closeGallery() {
     // les mêmes photos plus tard
     event.target.value = "";
   }
+
+  async function downloadPhoto(photoUrl, fileName = "photo-anniversaire.jpg") {
+  try {
+    const response = await fetch(photoUrl);
+
+    if (!response.ok) {
+      throw new Error("Impossible de télécharger la photo.");
+    }
+
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error("Erreur téléchargement photo:", error);
+    alert("Impossible d'enregistrer la photo sur le téléphone.");
+  }
+}
 }
 
   function handleDeletePhoto(photo) {
@@ -1457,6 +1482,18 @@ function cancelDeletePhoto() {
         alt="Souvenir de la fête"
         loading="lazy"
       />
+
+      <button
+  type="button"
+  onClick={() =>
+    downloadPhoto(
+      photo.photo_url,
+      `birthday-${photo.id}.jpg`
+    )
+  }
+>
+  📥 Enregistrer dans ma galerie
+</button>
 
       <button
   type="button"
